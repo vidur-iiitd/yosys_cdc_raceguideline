@@ -21,6 +21,7 @@
 #include "kernel/celltypes.h"
 #include "kernel/rtlil.h"
 #include "kernel/log.h"
+//#include "techmap_extract.cc"
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -81,10 +82,13 @@ struct SynthPass : public ScriptPass
 		log("    -flowmap\n");
 		log("        use FlowMap LUT techmapping instead of ABC\n");
 		log("\n");
-		log("    -no-rw-check\n");
-		log("        marks all recognized read ports as \"return don't-care value on\n");
-		log("        read/write collision\" (same result as setting the no_rw_check\n");
-		log("        attribute on all memories).\n");
+		log("\n");
+		log("    -input\n");
+		log("        use to define user defined asynchronous clocks for cdc check\n");
+		log("        this attribute must be followed by endlist to mark end of list\n");
+		log("\n");
+		log("    -endlist\n");
+		log("        use to mark end of cdc asynnchronous clock list\n");
 		log("\n");
 		log("\n");
 		log("The following commands are executed by this synthesis command:\n");
@@ -117,6 +121,7 @@ struct SynthPass : public ScriptPass
 	{
 		string run_from, run_to;
 		clear_flags();
+		
 
 		size_t argidx;
 		for (argidx = 1; argidx < args.size(); argidx++)
@@ -180,8 +185,15 @@ struct SynthPass : public ScriptPass
 				flowmap = true;
 				continue;
 			}
-			if (args[argidx] == "-no-rw-check") {
-				memory_opts += " -no-rw-check";
+			if (args[argidx] == "-input") {
+				argidx++;
+				while(strcmp(args[argidx].c_str(), "-endlist")){
+					argidx++;
+				}
+				// flowmap = true;
+				continue;
+			}
+			if (args[argidx] == "-endlist") {
 				continue;
 			}
 			break;
@@ -203,7 +215,7 @@ struct SynthPass : public ScriptPass
 
 		log_pop();
 	}
-
+	
 	void script() override
 	{
 		if (check_label("begin"))
@@ -212,12 +224,15 @@ struct SynthPass : public ScriptPass
 				run("hierarchy -check [-top <top> | -auto-top]");
 			} else {
 				if (top_module.empty()) {
-					if (flatten || autotop)
+					if (flatten || autotop){
 						run("hierarchy -check -auto-top");
-					else
+					}
+					else{
 						run("hierarchy -check");
-				} else
+					}
+				} else{
 					run(stringf("hierarchy -check -top %s", top_module.c_str()));
+				}
 			}
 		}
 
@@ -298,6 +313,7 @@ struct SynthPass : public ScriptPass
 			run("check");
 		}
 	}
+	
 } SynthPass;
 
 PRIVATE_NAMESPACE_END
