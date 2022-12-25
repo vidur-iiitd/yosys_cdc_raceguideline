@@ -736,7 +736,7 @@ int cdc_check_fanout_ext(RTLIL::Module *module, const RTLIL::SigSpec &sig, RTLIL
 								dump_sigspec(it->second);
 
 						// Checking for the connections and cell_name to comment on cdc
-						if(id_conn == wire_to_be_search && async1==async2)
+						if(id_conn == wire_to_be_search && async1 && async2)
 							cdc_found = true;
 						
 						// This checks for synchronizers
