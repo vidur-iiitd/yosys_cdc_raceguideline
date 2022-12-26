@@ -1072,6 +1072,7 @@ static bool param_has_no_default(const AstNode *param) {
 
 static RTLIL::Module *process_module(RTLIL::Design *design, AstNode *ast, bool defer, AstNode *original_ast = NULL, bool quiet = false)
 {
+	std::vector <std::string> temp_file_info; //To sort the problem of no warning message display
 	log_assert(current_scope.empty());
 	log_assert(ast->type == AST_MODULE || ast->type == AST_INTERFACE);
 	if (defer)
@@ -1079,11 +1080,13 @@ static RTLIL::Module *process_module(RTLIL::Design *design, AstNode *ast, bool d
 	else if (!quiet) {
 		log("Generating RTLIL representation for module `%s'.\n", ast->str.c_str());
 		// file_info.push_back("Generating RTLIL representation for module");
-		file_info.push_back(ast->str.c_str());
+		// file_info.push_back(ast->str.c_str());
+		temp_file_info.push_back(ast->str.c_str());
 	}
 
 	AstModule *module = new AstModule;
 	current_module = module;
+	
 
 	module->ast = NULL;
 	module->name = ast->str;
@@ -1308,13 +1311,20 @@ static RTLIL::Module *process_module(RTLIL::Design *design, AstNode *ast, bool d
 	std::string line;
 	if (ini_file){
 		while (getline(ini_file, line)) {
-            file_info.push_back(line);
+            // file_info.push_back(line);
+			temp_file_info.push_back(line);
 		}
 	}
-	// ff->close();
-	// std::cout << " baby!!!!!! ab tumhare hawalein watan " << std::endl;
-	// for(long unsigned int i=0; i<file_info.size(); i++)
-	// 	std::cout << file_info[i] << std::endl;
+
+	std::string message_display = "This module has no race_guidelines violation";
+	if(temp_file_info.size()==1){
+		temp_file_info.push_back(message_display);
+	}
+
+	for(long unsigned int i=0; i<temp_file_info.size(); ++i)
+		file_info.push_back(temp_file_info[i]);
+
+
 	
 	ini_file.close();
 	file_info.push_back(" ");
@@ -1404,8 +1414,13 @@ void AST::process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump
 	flag_rules_help = rules_help;
 	filename_rules_ast = filename_rules;
 
-	// std::cout << "The award goes to bhaishaab :" << current_ast->str.c_str() << std::endl;
-	// log("Generating RTLIL representation for module `%s'.\n", current_ast->str.c_str());
+	file_info.push_back("//*********************************************************************");
+	// file_info.push_back("// ");
+	// file_info.push_back("//Generate format of following file report:");
+	// file_info.push_back("/Module_name");
+	// file_info.push_back("<Warning>:<File_name>:<Line_number>:<Race_guideline_violation_code>");
+	// file_info.push_back("// ");
+	// file_info.push_back("//*********************************************************************");
 
 	log_assert(current_ast->type == AST_DESIGN);
 	for (AstNode *child : current_ast->children)
@@ -1493,6 +1508,7 @@ void AST::process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump
 	std::string check = ":";
 	std::string check_2;
 	std::string part_str;
+	bool warning_issue = false;
 	
 	
 
@@ -1508,15 +1524,12 @@ void AST::process(RTLIL::Design *design, AstNode *ast, bool dump_ast1, bool dump
 		std::string init = file_info[i].substr(0,1);
 		size_t found = file_info[i].find(check);
 		part_str = file_info[i].substr(0,found);	
-		if(!strcmp(part_str.c_str(),"Warning "))
+		if(!strcmp(part_str.c_str(),"Warning")){
 			count = count + 1;
+			warning_issue = true;
+		}
 		
 	}
-	if((count-global_index) == 0)
-		f << "The above module has no error wrt race guidelines." << std::endl;
-	f.close();
-	
-	// std::cout << " : " << (count - global_index) << std::endl;
 	
 	summary_race_guidelines.emplace(check_2, (count - global_index));
 	summary_race(summary_race_guidelines);
@@ -1985,3 +1998,4 @@ void AstModule::loadconfig() const
 // ff->close();
 
 YOSYS_NAMESPACE_END
+
