@@ -1,0 +1,8 @@
+//*********************************************************************
+\case6_pos
+Warning:../test/case6_pos.v:9:NO_SAME_VAR 
+ Following variable has been assigned multiple times included one shown above 
+\D 
+match found at : ../test/case6_pos.v:9 
+match found at : ../test/case6_pos.v:14 
+ 
