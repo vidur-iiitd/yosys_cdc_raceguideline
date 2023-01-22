@@ -1,0 +1,5 @@
+This folder contains some cases to explore the race guidelines better. Guideline number 4 is covered through guideline 1 and guideline 5. 
+The naming convention goes like this:
+    case<guideline_number>_<pos/neg>.v - pos is the naming convention used for code with the violation, and neg indicates violation-free code.
+    
+Along with the Verilog code, we have also provided the report of the corresponding race_guideline check.
